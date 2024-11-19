@@ -15,6 +15,9 @@ DWORD WINAPI OnDllAttach( LPVOID lpParameter )
         while ( pMainModule == nullptr )
             ::Sleep( 500UL );
 
+        // attach logger
+        L::AttachConsole( L"1000 euro cheat" );
+
         // setup render
         if ( !R::Setup( ) )
             L_PRINT( LOG_ERROR ) << XOR_STR("i cant setup render :(((");

@@ -15,33 +15,59 @@ bool H::Setup( )
 
 	L_PRINT( LOG_INFO ) << XOR_STR( "minhook initialization completed" );
 
-	static LPVOID pPresent = ( LPVOID )R::MethodsTable[ 8 ];
+	static LPVOID pPresent = ( LPVOID ) R::MethodsTable[ 8 ];
 	if ( !DTR::Present.Create( pPresent, &Present ) )
 		return false;
 
 	static LPVOID pSubtractAmmo = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "29 51 1C 79 07" ) ) );
 	if ( !DTR::SubtractAmmo.Create( pSubtractAmmo, &SubtractAmmo ) )
+	{
+		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook SubtractAmmo" );
 		return false;
+	}
 
 	static LPVOID pSubtractReserve = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "29 51 18 79 07" ) ) );
 	if ( !DTR::SubtractReserve.Create( pSubtractReserve, &SubtractReserve ) )
+	{
+		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook SubtractReserve" );
 		return false;
+	}
 
 	static LPVOID pDamageFormulaHEAT = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 83 EC 50 80 3D 4E 45 D0 05 00 0F 29 74 24 40" ) ) );
 	if ( !DTR::DamageFormulaHEAT.Create( pDamageFormulaHEAT, &DamageFormulaHEAT ) )
+	{
+		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook DamageFormulaHEAT" );
 		return false;
+	}
 
 	static LPVOID pDamageFormulaKinetic = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 83 EC 68 80 3D 7F 44 D0 05 00 0F 29 7C 24 40" ) ) );
 	if ( !DTR::DamageFormulaKinetic.Create( pDamageFormulaKinetic, &DamageFormulaKinetic ) )
+	{
+		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook DamageFormulaKinetic" );
 		return false;
+	}
 
 	static LPVOID pCalculateHitDamage = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 89 4C 24 08 57 48 81 EC 90 00 00 00 80 3D 7E" ) ) );
 	if ( !DTR::CalculateHitDamage.Create( pCalculateHitDamage, &CalculateHitDamage ) )
+	{
+		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook CalculateHitDamage" );
 		return false;
-
+	}
 	static LPVOID pShotCycleAndReload = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "40 53 57 41 54 41 56 41 57 48 83 EC 30 80 3D B5" ) ) );
 	if ( !DTR::ShotCycleAndReload.Create( pShotCycleAndReload, &ShotCycleAndReload ) )
+	{
+		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook ShotCycleAndReload" );
 		return false;
+	}
+
+	static LPVOID pDebugFogOfWarSystemUpdate = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 48 ? 57 41 54 41 55 41 56 41 57 48 81 EC 30 03 00 00" ) ) );
+	if ( !DTR::DebugFogOfWarSystemUpdate.Create( pDebugFogOfWarSystemUpdate, &DebugFogOfWarSystemUpdate ) )
+	{
+		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook DebugFogOfWarSystemUpdate" );
+		return false;
+	}
+
+	L_PRINT( LOG_INFO ) << XOR_STR( "hooks initialization completed" );
 
 	return true;
 }
@@ -168,11 +194,34 @@ void FASTCALL H::SubtractReserve( __int64 a1, int a2 )
 	return;
 }
 
-__int64 FASTCALL H::ShotCycleAndReload( __int64 weapon, __int64 unitEntity, __int64 ammunitionBox, int shootAmmoCount )
+void* FASTCALL H::ShotCycleAndReload( void* weapon, void* unitEntity, void* ammunitionBox, int32_t shootAmmoCount, void* method )
 {
 	static auto oShotCycleAndReload = DTR::ShotCycleAndReload.GetOriginal<decltype( &ShotCycleAndReload )>( );
 	if ( !CFG::bRapidFire )
-		return oShotCycleAndReload( weapon, unitEntity, ammunitionBox, shootAmmoCount );
+		return oShotCycleAndReload( weapon, unitEntity, ammunitionBox, shootAmmoCount, method );
 
-	return oShotCycleAndReload( weapon, unitEntity, ammunitionBox, 0 );
+	return oShotCycleAndReload( weapon, unitEntity, ammunitionBox, 0, method );
+}
+
+void FASTCALL H::DebugFogOfWarSystemUpdate( void* this_ptr, float deltaTime, void* allFowEntities, const void* method )
+{
+	static auto oDebugFogOfWarSystemUpdate = DTR::DebugFogOfWarSystemUpdate.GetOriginal<decltype( &DebugFogOfWarSystemUpdate )>( );
+
+	auto pMainModule = MEM::GetModuleBaseHandle( GAMEASSEMBLY_DLL );
+	if ( pMainModule )
+	{
+		auto pTypeInfo = *reinterpret_cast< uintptr_t* >( ( uintptr_t ) pMainModule + 0x18669FF48 );
+		if ( pTypeInfo )
+		{
+			auto pStaticFilds = *reinterpret_cast< uintptr_t* >( pTypeInfo + 0xB8 );
+			if ( pStaticFilds )
+			{
+				auto pDebugMode = *reinterpret_cast< uintptr_t* >( pStaticFilds + 0x8 );
+				if ( pDebugMode )
+					*reinterpret_cast< bool* >( pDebugMode ) = true;
+			}
+		}
+	}
+
+	return oDebugFogOfWarSystemUpdate( this_ptr, deltaTime, allFowEntities, method );
 }

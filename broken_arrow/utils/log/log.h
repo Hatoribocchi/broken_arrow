@@ -233,8 +233,6 @@ namespace L
 		template <typename T> requires std::is_floating_point_v<T>
 		Stream_t& operator<<( const T value )
 		{
-#if defined(LOG_CONSOLE) || defined(LOG_FILE)
-			//static_assert((nModeFlags & (LOG_MODE_FLOAT_FORMAT_FIXED | LOG_MODE_FLOAT_FORMAT_SCIENTIFIC)) && std::is_same_v<T, float>); // expected 'double' or 'long double'
 			int iDesiredPrecision = /*((nModeFlags & (LOG_MODE_FLOAT_FORMAT_FIXED | LOG_MODE_FLOAT_FORMAT_SCIENTIFIC)) ? -1 : (*/ iPrecision > 0 ? iPrecision : FLT_DIG; //));
 
 			char szFormatBuffer[ 8 ];
@@ -271,7 +269,6 @@ namespace L
 			const int nFloatLength = CRT::StringPrintN( szFloatBuffer, sizeof( szFloatBuffer ), szFormatBuffer, iDesiredPrecision, value );
 
 			WriteMessage( szFloatBuffer, nFloatLength );
-#endif
 			return *this;
 		}
 
