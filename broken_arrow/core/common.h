@@ -2,6 +2,10 @@
 #include <windows.h>
 #include <d3d11.h>
 #include <dxgi.h>
+#include <cstdint>
+#include <cstddef>
+#include <utility>
+#include <type_traits>
 
 #ifdef _DEBUG
 #define XOR_STR(STRING) STRING
