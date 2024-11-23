@@ -7,67 +7,74 @@
 
 bool H::Setup( )
 {
-	if ( MH_Initialize( ) != MH_OK )
+	if (MH_Initialize() != MH_OK)
 	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "failed to initialize minhook" );
+		L_PRINT(LOG_ERROR) << XOR_STR("failed to initialize minhook");
 		return false;
 	}
 
-	L_PRINT( LOG_INFO ) << XOR_STR( "minhook initialization completed" );
+	L_PRINT(LOG_INFO) << XOR_STR("minhook initialization completed");
 
-	static LPVOID pPresent = ( LPVOID ) R::MethodsTable[ 8 ];
-	if ( !DTR::Present.Create( pPresent, &Present ) )
+	static LPVOID pPresent = (LPVOID)R::MethodsTable[8];
+	if (!DTR::Present.Create(pPresent, &Present))
 		return false;
 
-	static LPVOID pSubtractAmmo = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "29 51 1C 79 07" ) ) );
-	if ( !DTR::SubtractAmmo.Create( pSubtractAmmo, &SubtractAmmo ) )
+	static LPVOID pSubtractAmmo = (LPVOID)(MEM::FindPattern(GAMEASSEMBLY_DLL, XOR_STR("29 51 1C 79 07"))); //AmmunitionContainer
+	if (!DTR::SubtractAmmo.Create(pSubtractAmmo, &SubtractAmmo))
 	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook SubtractAmmo" );
+		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook SubtractAmmo");
 		return false;
 	}
 
-	static LPVOID pSubtractReserve = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "29 51 18 79 07" ) ) );
-	if ( !DTR::SubtractReserve.Create( pSubtractReserve, &SubtractReserve ) )
+	static LPVOID pSubtractReserve = (LPVOID)(MEM::FindPattern(GAMEASSEMBLY_DLL, XOR_STR("29 51 18 79 07"))); //AmmunitionContainer
+	if (!DTR::SubtractReserve.Create(pSubtractReserve, &SubtractReserve))
 	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook SubtractReserve" );
+		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook SubtractReserve");
 		return false;
 	}
 
-	static LPVOID pDamageFormulaHEAT = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 83 EC 50 80 3D 4E 45 D0 05 00 0F 29 74 24 40" ) ) );
-	if ( !DTR::DamageFormulaHEAT.Create( pDamageFormulaHEAT, &DamageFormulaHEAT ) )
+	static LPVOID pDamageFormulaHEAT = (LPVOID)(MEM::FindPattern(
+		GAMEASSEMBLY_DLL, XOR_STR("40 53 48 83 EC 50 80 3D DA 1C CD 05 00 0F 29 74 24 40"))); //BattleSystemHelpers
+	if (!DTR::DamageFormulaHEAT.Create(pDamageFormulaHEAT, &DamageFormulaHEAT))
 	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook DamageFormulaHEAT" );
+		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook DamageFormulaHEAT");
 		return false;
 	}
 
-	static LPVOID pDamageFormulaKinetic = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 83 EC 68 80 3D 7F 44 D0 05 00 0F 29 7C 24 40" ) ) );
-	if ( !DTR::DamageFormulaKinetic.Create( pDamageFormulaKinetic, &DamageFormulaKinetic ) )
+	static LPVOID pDamageFormulaKinetic = (LPVOID)(MEM::FindPattern(
+		GAMEASSEMBLY_DLL, XOR_STR("48 83 EC 68 80 3D 0B 1C CD 05 00 0F 29 7C 24 40"))); //BattleSystemHelpers
+	if (!DTR::DamageFormulaKinetic.Create(pDamageFormulaKinetic, &DamageFormulaKinetic))
 	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook DamageFormulaKinetic" );
+		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook DamageFormulaKinetic");
 		return false;
 	}
 
-	static LPVOID pCalculateHitDamage = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 89 4C 24 08 57 48 81 EC 90 00 00 00 80 3D 7E" ) ) );
-	if ( !DTR::CalculateHitDamage.Create( pCalculateHitDamage, &CalculateHitDamage ) )
+	static LPVOID pCalculateHitDamage = (LPVOID)(MEM::FindPattern(
+		GAMEASSEMBLY_DLL, XOR_STR("48 89 6C 24 20 48 89 4C 24 08 57 48 81 EC 90 00 00 00"))); //BattleSystemHelpers
+	if (!DTR::CalculateHitDamage.Create(pCalculateHitDamage, &CalculateHitDamage))
 	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook CalculateHitDamage" );
-		return false;
-	}
-	static LPVOID pShotCycleAndReload = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "40 53 57 41 54 41 56 41 57 48 83 EC 30 80 3D B5" ) ) );
-	if ( !DTR::ShotCycleAndReload.Create( pShotCycleAndReload, &ShotCycleAndReload ) )
-	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook ShotCycleAndReload" );
+		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook CalculateHitDamage");
 		return false;
 	}
 
-	static LPVOID pDebugFogOfWarSystemUpdate = ( LPVOID ) ( MEM::FindPattern( GAMEASSEMBLY_DLL, XOR_STR( "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 48 ? 57 41 54 41 55 41 56 41 57 48 81 EC 30 03 00 00" ) ) );
-	if ( !DTR::DebugFogOfWarSystemUpdate.Create( pDebugFogOfWarSystemUpdate, &DebugFogOfWarSystemUpdate ) )
+	static LPVOID pShotCycleAndReload = (LPVOID)(MEM::FindPattern(
+		GAMEASSEMBLY_DLL, XOR_STR("40 53 57 41 54 41 56 41 57 48 83 EC 30 80 3D B1 40 CB 05 00"))); //ShootingSystem
+	if (!DTR::ShotCycleAndReload.Create(pShotCycleAndReload, &ShotCycleAndReload))
 	{
-		L_PRINT( LOG_ERROR ) << XOR_STR( "i cant hook DebugFogOfWarSystemUpdate" );
+		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook ShotCycleAndReload");
 		return false;
 	}
 
-	L_PRINT( LOG_INFO ) << XOR_STR( "hooks initialization completed" );
+	static LPVOID pDebugFogOfWarSystemUpdate = (LPVOID)(MEM::FindPattern(
+		GAMEASSEMBLY_DLL,
+		XOR_STR("48 8B C4 48 89 58 ? 48 89 70 ? 48 89 48 ? 57 41 54 41 55 41 56 41 57 48 81 EC 30 03 00 00"))); //DebugFogOfWarSystem
+	if (!DTR::DebugFogOfWarSystemUpdate.Create(pDebugFogOfWarSystemUpdate, &DebugFogOfWarSystemUpdate))
+	{
+		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook DebugFogOfWarSystemUpdate");
+		return false;
+	}
+
+	L_PRINT(LOG_INFO) << XOR_STR("hooks initialization completed");
 
 	return true;
 }
