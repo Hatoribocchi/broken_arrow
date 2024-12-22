@@ -65,15 +65,6 @@ bool H::Setup( )
 		return false;
 	}
 
-	static LPVOID pDebugFogOfWarSystemUpdate = (LPVOID)(MEM::FindPattern(
-		GAMEASSEMBLY_DLL,
-		XOR_STR("48 8B C4 48 89 58 ? 48 89 70 ? 48 89 48 ? 57 41 54 41 55 41 56 41 57 48 81 EC 30 03 00 00"))); //DebugFogOfWarSystem
-	if (!DTR::DebugFogOfWarSystemUpdate.Create(pDebugFogOfWarSystemUpdate, &DebugFogOfWarSystemUpdate))
-	{
-		L_PRINT(LOG_ERROR) << XOR_STR("i cant hook DebugFogOfWarSystemUpdate");
-		return false;
-	}
-
 	L_PRINT(LOG_INFO) << XOR_STR("hooks initialization completed");
 
 	return true;
@@ -208,27 +199,4 @@ void* FASTCALL H::ShotCycleAndReload( void* weapon, void* unitEntity, void* ammu
 		return oShotCycleAndReload( weapon, unitEntity, ammunitionBox, shootAmmoCount, method );
 
 	return oShotCycleAndReload( weapon, unitEntity, ammunitionBox, 0, method );
-}
-
-void FASTCALL H::DebugFogOfWarSystemUpdate( void* this_ptr, float deltaTime, void* allFowEntities, const void* method )
-{
-	static auto oDebugFogOfWarSystemUpdate = DTR::DebugFogOfWarSystemUpdate.GetOriginal<decltype( &DebugFogOfWarSystemUpdate )>( );
-
-	auto pMainModule = MEM::GetModuleBaseHandle( GAMEASSEMBLY_DLL );
-	if ( pMainModule )
-	{
-		auto pTypeInfo = *reinterpret_cast< uintptr_t* >( ( uintptr_t ) pMainModule + 0x18669FF48 );
-		if ( pTypeInfo )
-		{
-			auto pStaticFilds = *reinterpret_cast< uintptr_t* >( pTypeInfo + 0xB8 );
-			if ( pStaticFilds )
-			{
-				auto pDebugMode = *reinterpret_cast< uintptr_t* >( pStaticFilds + 0x8 );
-				if ( pDebugMode )
-					*reinterpret_cast< bool* >( pDebugMode ) = true;
-			}
-		}
-	}
-
-	return oDebugFogOfWarSystemUpdate( this_ptr, deltaTime, allFowEntities, method );
 }
